@@ -1,0 +1,15 @@
+# build artefacts
+build/
+library_chain
+library_chain_overdue
+*.o
+
+# runtime state - regenerated on first run, must never be committed
+keys/
+auth.dat
+chain.dat
+chain.dat.tmp
+
+# report intermediates
+docs/*.pdf
+shots/

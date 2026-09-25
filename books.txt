@@ -1,0 +1,10 @@
+BK001,Things Fall Apart,Chinua Achebe
+BK002,Americanah,Chimamanda Ngozi Adichie
+BK003,The River Between,Ngũgĩ wa Thiong'o
+BK004,Half of a Yellow Sun,Chimamanda Ngozi Adichie
+BK005,Purple Hibiscus,Chimamanda Ngozi Adichie
+BK006,A Grain of Wheat,Ngũgĩ wa Thiong'o
+BK007,Nervous Conditions,Tsitsi Dangarembga
+BK008,So Long a Letter,Mariama Ba
+BK009,The Beautyful Ones Are Not Yet Born,Ayi Kwei Armah
+BK010,Season of Migration to the North,Tayeb Salih

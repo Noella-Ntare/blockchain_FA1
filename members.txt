@@ -1,0 +1,8 @@
+ALU001,John Doe,BLK101
+ALU002,Jane Smith,BLK101
+ALU003,Amara Diallo,BLK101
+ALU004,Kwame Mensah,BLK102
+ALU005,Aisha Uwimana,BLK102
+ALU006,Peter Okonkwo,BLK103
+ALU007,Grace Mutoni,BLK103
+ALU008,Samuel Njoroge,BLK104
