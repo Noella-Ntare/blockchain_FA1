@@ -14,8 +14,33 @@
 | + | OVERDUE detection (14-day loan period) | `bc_flag_overdue()` |
 
 ---
+## 2. Dependencies
 
-## 2. Compilation instructions
+- **GCC** (or any C11 compiler) and **GNU Make**
+- **OpenSSL development headers** (`libcrypto`) — for SHA-256 and ECDSA
+
+### Install
+
+```bash
+# Debian / Ubuntu / WSL
+sudo apt-get update
+sudo apt-get install -y build-essential libssl-dev
+
+# Fedora / RHEL
+sudo dnf install -y gcc make openssl-devel
+
+# macOS
+brew install openssl@3
+```
+
+### Build
+
+```bash
+make
+./library_chain
+```
+
+## 3. Compilation instructions
 
 ```bash
 git clone <https://github.com/Noella-Ntare/blockchain_FA1>
@@ -33,7 +58,7 @@ gcc -std=c11 -Wall -Wextra -O2 -Iinclude src/*.c -o library_chain -lcrypto
 ```
 
 
-## 3. How to run
+## 4. How to run
 
 ```bash
 ./library_chain
@@ -77,7 +102,7 @@ Passwords are never stored: `auth.dat` holds `SHA-256(salt + password)` with a
 
 ---
 
-## 4. Input file formats
+## 5. Input file formats
 
 `books.txt` — `book_id,title,author`
 
