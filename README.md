@@ -1,121 +1,74 @@
 
-## 1. Features
+## Formative 2: Library Lending Blockchain
 
-| # | Requirement | Where it lives |
-|---|---|---|
-| 1 | Blockchain data structure holding lending records | `include/types.h`, `src/blockchain.c` |
-| 2 | Book and member registries loaded from file and validated before any action | `src/registry.c` |
-| 3 | SHA-256 hashing linking blocks | `sha256_hex()`, `bc_compute_hash()` |
-| 4 | ECDSA digital signatures authenticating lending actions | `crypto_sign()`, `crypto_verify()` |
-| 5 | Chain validation logic detecting tampering | `bc_validate()` |
-| 6 | CLI to borrow, return and view lending records | `src/main.c` |
-| + | Password authentication and role-based access control | `auth_login()` |
-| + | File persistence of the ledger | `src/storage.c` |
-| + | OVERDUE detection (14-day loan period) | `bc_flag_overdue()` |
+This C11 command-line project extends the Formative 1 tracker with a persisted pending pool, proof-of-work confirmation, token rewards for book returns, UTXO and account-based ledgers, and solo, pool, and cloud mining simulations.
 
----
-## 2. Dependencies
+### Requirements
 
-- **GCC** (or any C11 compiler) and **GNU Make**
-- **OpenSSL development headers** (`libcrypto`) — for SHA-256 and ECDSA
+- GCC or another C11 compiler, GNU Make, and OpenSSL development headers (`libcrypto`).
+- On Windows, use WSL or an MSYS2/MinGW environment that provides GCC, Make, and OpenSSL. Native PowerShell alone does not provide the POSIX APIs used by this project.
 
-### Install
+Debian/Ubuntu/WSL:
 
 ```bash
-# Debian / Ubuntu / WSL
 sudo apt-get update
-sudo apt-get install -y build-essential libssl-dev
-
-# Fedora / RHEL
-sudo dnf install -y gcc make openssl-devel
-
-# macOS
-brew install openssl@3
+sudo apt-get install build-essential libssl-dev
 ```
 
-### Build
+### Build and Run
+
+From the project directory:
 
 ```bash
 make
-./library_chain
+./library_chain --model utxo --difficulty 2
 ```
 
-## 3. Compilation instructions
+Choose one model for the session with `--model utxo` or `--model account`. Omit `--model` to choose interactively after login. Set proof-of-work difficulty with `--difficulty 1` through `--difficulty 4`; the default is 2 leading zeroes. Example:
 
 ```bash
-git clone <https://github.com/Noella-Ntare/blockchain_FA1>
-cd library-blockchain
-make
+./library_chain --model account --difficulty 3
 ```
 
-This produces the executable `./library_chain`. The build is warning-clean
-under `-Wall -Wextra -Wpedantic`.
-
-Manual compilation without Make:
+The Makefile links `-lcrypto`. Manual build:
 
 ```bash
-gcc -std=c11 -Wall -Wextra -O2 -Iinclude src/*.c -o library_chain -lcrypto
+gcc -std=c11 -Wall -Wextra -Wpedantic -O2 -Iinclude src/*.c -o library_chain -lcrypto
 ```
 
+### First Run and Authentication
 
-## 4. How to run
+The application loads `books.txt` and `members.txt`, loads or generates an ECDSA P-256 keypair under `keys/`, loads or initializes `auth.dat`, and then loads `chain.dat`. New data starts with a signed genesis block. The chain file accepts the original Formative 1 format and the extended format containing confirmed and pending entries.
 
-```bash
-./library_chain
-```
+| Username | Password | Role |
+|---|---|---|
+| `librarian` | `library123` | Can record events, mine, transfer tokens, and use all read options |
+| `viewer` | `view123` | Read-only ledger access |
 
-On the **first run** the program:
+The auth file stores salted SHA-256 password hashes, not plaintext passwords.
 
-1. loads `books.txt` and `members.txt` (aborts if either is missing or empty);
-2. generates an ECDSA P-256 key pair into `keys/` (private key `chmod 0600`);
-3. creates `auth.dat` with two default accounts;
-4. creates the genesis block and writes `chain.dat`.
+### Main Menu
 
-On every **later run** it reloads `chain.dat` and validates the whole chain
-before the menu appears.
+1. Borrow/return actions create pending lending records; they do not immediately change the confirmed chain.
+2. Option 11 displays the pending pool. Option 12 mines it using solo, pool, or cloud simulation; enter registered member IDs to receive simulated mining payouts.
+3. Option 3 displays confirmed lending records and signature status. Option 4 validates hashes, links, signatures, and recorded proof-of-work difficulty.
+4. Option 13 displays member balances. Option 14 displays all unspent outputs in UTXO mode.
+5. Option 15 submits a manual transfer. In account mode, enter the sender's next nonce (initially 1). Option 16 prints a member's in-memory transaction history.
 
-### Default accounts
+Returns create a 10-coin reward when returned within the 14-day loan period, otherwise 5 coins. No reward transaction is created for a borrow or an overdue notice. The fixed transaction fee is 1 coin, so the member receives 9 or 4 coins respectively; the fee is represented by a `SYSTEM` UTXO or deducted from the account-model credit.
 
-| Username | Password | Role | Rights |
-|---|---|---|---|
-| `librarian` | `library123` | LIBRARIAN | borrow, return, overdue sweep, tamper demo, plus everything below |
-| `viewer` | `view123` | VIEWER | view records, validate chain, list registries |
+### Ledger Models and Mining Assumptions
 
-Passwords are never stored: `auth.dat` holds `SHA-256(salt + password)` with a
-16-byte random salt per account. Change them by deleting `auth.dat` and editing
-`auth_bootstrap()`, or by generating a new hash yourself.
+- **UTXO:** confirmed return rewards create an output for the member and a fee output for `SYSTEM`. Manual transfers consume unspent outputs, create recipient and fee outputs, and return excess as change. Spent outputs cannot be selected again.
+- **Account:** confirmed return rewards credit the member net of the fee. Each outgoing transfer requires exactly the next sender nonce. Each member's in-memory linked-list history includes sender, recipient, amount, fee, and nonce.
+- The token ledger is reconstructed from confirmed return blocks at startup. Manual transfers and their histories are session-only, as required for the in-memory history model; pending return rewards do not affect balances.
+- The configured difficulty is included in each new block and checked during validation. Mining rewards are separate from library-member return tokens and are credited to the selected registered member in the current session: solo reward is 2 coins per block; pool mining deducts a 2% fee; cloud mining uses 2 rental coins plus 1 maintenance coin per round and credits positive net earnings across the selected 1-5 rounds.
+- Pool miner hash rates are randomized per run. Their attempt counts are allocated in proportion to those rates; table rewards use the same contribution share after the pool fee.
 
+### Input Files
 
-### A small walkthrough
+`books.txt` uses `book_id,title,author`; `members.txt` uses `member_id,full_name,course_code`. Member IDs are the account/UTXO owners. Keep these files in the working directory when launching the executable.
 
-```
-1  ->  BK001 / ALU001      record a loan          (block #1 appended)
-1  ->  BK999 / ALU001      ERROR: Book or Member not found
-1  ->  BK002 / ALU999      ERROR: Book or Member not found
-1  ->  BK001 / ALU003      ERROR: already on loan to John Doe
-3                          view the whole ledger with signature status
-4                          validate: CHAIN VALID
-2  ->  BK001 / ALU001      record the return      (block #2 appended)
-9  ->  block 1, field 1    tamper demo: CHAIN INVALID, block 1 named
-10                         reload the authentic ledger from disk
-```
+### Demonstration and Report
 
----
-
-## 5. Input file formats
-
-`books.txt` — `book_id,title,author`
-
-```
-BK001,Things Fall Apart,Chinua Achebe
-BK002,Americanah,Chimamanda Ngozi Adichie
-BK003,The River Between,Ngũgĩ wa Thiong'o
-```
-
-`members.txt` — `member_id,full_name,course_code`
-
-```
-ALU001,John Doe,BLK101
-ALU002,Jane Smith,BLK101
-ALU003,Amara Diallo,BLK101
----
+See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for a 5-10 minute walkthrough and screenshot checklist. See [TECHNICAL_REPORT.md](TECHNICAL_REPORT.md) for the implementation report draft and edge-case test plan. Capture the requested application screenshots during your run and insert them into the report before submitting; they are not generated by the source code.
