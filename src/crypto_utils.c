@@ -271,14 +271,15 @@ static void read_password(char *buf, size_t sz)
 {
     struct termios old, quiet;
     size_t n;
+    int echo_disabled = 0;
 
     if (tcgetattr(STDIN_FILENO, &old) == 0) {
         quiet = old;
         quiet.c_lflag &= ~(tcflag_t)ECHO;
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &quiet);
+        echo_disabled = tcsetattr(STDIN_FILENO, TCSAFLUSH, &quiet) == 0;
     }
     if (fgets(buf, (int)sz, stdin) == NULL) buf[0] = '\0';
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &old);
+    if (echo_disabled) tcsetattr(STDIN_FILENO, TCSAFLUSH, &old);
     printf("\n");
 
     n = strlen(buf);
