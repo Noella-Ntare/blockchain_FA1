@@ -20,6 +20,10 @@ int bc_borrow(Blockchain *chain, const Registry *reg, EVP_PKEY *key,
 int bc_return(Blockchain *chain, const Registry *reg, EVP_PKEY *key,
               const char *book_id, const char *member_id);
 
+int bc_mine_pending(Blockchain *chain, EVP_PKEY *key, int difficulty,
+                    uint64_t *attempts_out, int *confirmed_out);
+void bc_print_pending(const Blockchain *chain);
+
 int bc_flag_overdue(Blockchain *chain, EVP_PKEY *key, int *flagged_out);
 
 /* Returns the block index for an open loan, or -1 if no loan is active. */
