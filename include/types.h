@@ -4,11 +4,13 @@
 
 #include <time.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /* Static limits for the local registry and ledger. */
 #define MAX_BOOKS          512
 #define MAX_MEMBERS        512
 #define MAX_BLOCKS        4096
+#define MAX_PENDING_BLOCKS 512
 
 /* Hash and signature sizing. */
 #define HASH_HEX_LEN        65   /* 64 hex chars + NUL */
@@ -62,12 +64,20 @@ typedef struct {
     unsigned char signature[SIG_MAX_LEN];
     size_t        sig_len;
     char          hash[HASH_HEX_LEN];
+    int           format_version;
+    int           token_reward;
+    int           difficulty;
+    char          transaction_id[HASH_HEX_LEN];
+    uint64_t      nonce;
+    uint64_t      hash_attempts;
 } Block;
 
 /* Ordered list of blocks forming the append-only ledger. */
 typedef struct {
     Block blocks[MAX_BLOCKS];
     int   count;
+    Block pending[MAX_PENDING_BLOCKS];
+    int   pending_count;
 } Blockchain;
 
 /* In-memory registry tables loaded from the CSV files. */
